@@ -1,5 +1,7 @@
 const hre = require("hardhat");
+
 const { encryptDataField, decryptNodeResponse } = require("@swisstronik/utils");
+
 const sendShieldedTransaction = async (signer, destination, data, value) => {
   const rpcLink = hre.network.config.url;
   const [encryptedData] = await encryptDataField(rpcLink, data);
@@ -12,23 +14,19 @@ const sendShieldedTransaction = async (signer, destination, data, value) => {
 };
 
 async function main() {
-  const contractAddress = "0xd4cb51dF99257Ab9c0506Dc77bfF98Ebc2bd1Df8";
+  const contractAddress = "0x1730c6d19136cc7E61080ECbc8fc468b8972cC0D"
   const [signer] = await hre.ethers.getSigners();
-
-  const contractFactory = await hre.ethers.getContractFactory("TestToken");
+  const contractFactory = await hre.ethers.getContractFactory("ZunXBT");
   const contract = contractFactory.attach(contractAddress);
-
-  const functionName = "mint100tokens";
-  const mint100TokensTx = await sendShieldedTransaction(
+  const functionName = "safeMint";
+  const safeMintTx = await sendShieldedTransaction(
     signer,
     contractAddress,
-    contract.interface.encodeFunctionData(functionName),
+    contract.interface.encodeFunctionData(functionName, [signer.address, 1]),
     0
   );
-
-  await mint100TokensTx.wait();
-
-  console.log("Transaction Receipt: ", mint100TokensTx.hash);
+  await safeMintTx.wait();
+  console.log(`Transaction URL of Mint: https://explorer-evm.testnet.swisstronik.com/tx/${safeMintTx.hash}`);
 }
 
 main().catch((error) => {
